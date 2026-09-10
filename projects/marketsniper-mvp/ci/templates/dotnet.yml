@@ -1,0 +1,108 @@
+# =============================================================================
+# ci/templates/dotnet.yml — сборка, тесты и статанализ бэкенда
+#
+# Условия запуска: изменения в backend/ И наличие файла решения.
+# Пока backend/MarketSniper.slnx не создан — джобы не появляются в пайплайне.
+#
+# Тесты запускаются в режиме Microsoft.Testing.Platform (xunit.v3 4.0),
+# см. backend/global.json. Microsoft.NET.Test.Sdk при этом не используется.
+# =============================================================================
+
+.dotnet-base:
+  image: mcr.microsoft.com/dotnet/sdk:10.0.401-noble
+  interruptible: true
+  cache:
+    key:
+      files:
+        - backend/Directory.Packages.props
+    paths:
+      - .nuget/packages
+  before_script:
+    - dotnet --info | head -5
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes:
+        compare_to: 'refs/heads/main'
+        paths: ['backend/**/*', '.editorconfig']
+      exists: ['backend/MarketSniper.slnx']
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      changes:
+        compare_to: 'HEAD~1'
+        paths: ['backend/**/*', '.editorconfig']
+      exists: ['backend/MarketSniper.slnx']
+    - if: $CI_COMMIT_TAG
+      exists: ['backend/MarketSniper.slnx']
+
+# --- Сборка ------------------------------------------------------------------
+dotnet:build:
+  extends: .dotnet-base
+  stage: build
+  script:
+    - cd backend
+    - dotnet restore --locked-mode
+    - dotnet build --no-restore -c Release
+  artifacts:
+    name: "backend-build-$CI_COMMIT_SHORT_SHA"
+    when: on_success
+    expire_in: 1 day
+    paths:
+      - backend/**/bin/
+      - backend/**/obj/
+
+# --- Статанализ и форматирование --------------------------------------------
+dotnet:format:
+  extends: .dotnet-base
+  stage: test
+  needs: ["dotnet:build"]
+  script:
+    - cd backend
+    # Возвращает ненулевой код, если формат отличается от .editorconfig
+    - dotnet format --verify-no-changes --no-restore
+
+# --- Тесты (unit + architecture, затем integration) --------------------------
+dotnet:test:
+  extends: .dotnet-base
+  stage: test
+  needs: ["dotnet:build"]
+  script:
+    - cd backend
+    - >
+      dotnet test --solution MarketSniper.slnx -c Release
+      -- --report-trx --report-trx-filename results.trx
+      --coverage --coverage-output-format cobertura
+      --results-directory TestResults
+  artifacts:
+    name: "backend-tests-$CI_COMMIT_SHORT_SHA"
+    when: always
+    expire_in: 1 week
+    paths:
+      - backend/TestResults/
+    reports:
+      junit: backend/TestResults/**/*.trx
+      coverage_report:
+        coverage_format: cobertura
+        path: backend/TestResults/**/coverage.cobertura.xml
+
+# --- Публикация артефакта сборки (для образа) --------------------------------
+dotnet:publish:
+  extends: .dotnet-base
+  stage: package
+  needs: ["dotnet:build", "dotnet:test"]
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      changes:
+        compare_to: 'HEAD~1'
+        paths: ['backend/**/*']
+      exists: ['backend/MarketSniper.slnx']
+    - if: $CI_COMMIT_TAG
+      exists: ['backend/MarketSniper.slnx']
+  script:
+    - cd backend
+    - >
+      dotnet publish src/MarketSniper.Web/MarketSniper.Web.csproj
+      -c Release --no-restore -o ./publish
+  artifacts:
+    name: "backend-publish-$CI_COMMIT_SHORT_SHA"
+    expire_in: 1 week
+    paths:
+      - backend/publish/

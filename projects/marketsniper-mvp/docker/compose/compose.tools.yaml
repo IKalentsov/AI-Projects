@@ -1,0 +1,145 @@
+# =============================================================================
+# compose.tools.yaml — инструменты разработки (профили, по требованию)
+#
+# Профили:
+#   observability — Aspire Dashboard (логи + трейсы + метрики, MIT) — основной
+#   seq           — Seq (структурированные логи). ЛИЦЕНЗИЯ: проприетарная EULA,
+#                   бесплатен только тариф Individual (1 пользователь). Опционален.
+#   tools         — pgAdmin (UI для PostgreSQL)
+#   sonar         — SonarQube Community Build + его БД (локальный статанализ)
+#
+# Примеры:
+#   docker compose -f docker/compose/compose.tools.yaml --profile observability --env-file .env up -d
+#   docker compose -f docker/compose/compose.tools.yaml --profile tools --env-file .env up -d
+#   docker compose -f docker/compose/compose.tools.yaml --profile sonar --env-file .env up -d
+# =============================================================================
+name: marketsniper
+
+services:
+  # --- Aspire Dashboard: логи, трейсы, метрики по OTLP (MIT) ------------------
+  # Принимает OTLP от backend, данных в памяти: перезапуск = чистый журнал.
+  # ВНИМАНИЕ: запускается без аутентификации — только для локальной разработки.
+  aspire-dashboard:
+    image: mcr.microsoft.com/dotnet/aspire-dashboard:13.5.2
+    container_name: marketsniper-aspire-dashboard
+    profiles: ["observability"]
+    restart: unless-stopped
+    environment:
+      DOTNET_DASHBOARD_UNSECURED_ALLOW_ANONYMOUS: "true"
+      ASPIRE_DASHBOARD_OTLP_ENDPOINT_URL: http://0.0.0.0:18889
+      TZ: ${TZ:-Europe/Moscow}
+    ports:
+      - "${ASPIRE_UI_PORT:-18888}:18888"    # веб-интерфейс
+      - "${ASPIRE_OTLP_PORT:-18889}:18889"  # OTLP (gRPC)
+    networks:
+      - marketsniper-net
+
+  # --- Seq: структурированные логи (опционально) ------------------------------
+  # ЛИЦЕНЗИЯ: проприетарная (EULA), бесплатный тариф — Individual (один пользователь).
+  # Поэтому по умолчанию НЕ используется: dev-наблюдаемость закрывает Aspire Dashboard.
+  # Переменной SEQ_FIRST_RUN_PASSWORD не существует: используйте SEQ_FIRSTRUN_*.
+  seq:
+    image: datalust/seq:2026.1.17114
+    container_name: marketsniper-seq
+    profiles: ["seq"]
+    restart: unless-stopped
+    environment:
+      ACCEPT_EULA: "Y"
+      TZ: ${TZ:-Europe/Moscow}
+      # Без этих переменных Seq стартует БЕЗ аутентификации
+      SEQ_FIRSTRUN_ADMINUSERNAME: ${SEQ_ADMIN_USERNAME:-admin}
+      SEQ_FIRSTRUN_ADMINPASSWORD: ${SEQ_ADMIN_PASSWORD:-}
+    ports:
+      - "${SEQ_UI_PORT:-8081}:80"
+      - "${SEQ_HOST_PORT:-5341}:5341"
+    volumes:
+      - seq-data:/data
+    networks:
+      - marketsniper-net
+
+  # --- pgAdmin: UI для PostgreSQL --------------------------------------------
+  pgadmin:
+    image: dpage/pgadmin4:9.17
+    container_name: marketsniper-pgadmin
+    profiles: ["tools"]
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-admin@marketsniper.local}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:?PGADMIN_DEFAULT_PASSWORD is required}
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
+      TZ: ${TZ:-Europe/Moscow}
+    ports:
+      - "${PGADMIN_HOST_PORT:-8082}:80"
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - marketsniper-net
+
+  # --- SonarQube Community Build: локальный статанализ ------------------------
+  # Community Build бесплатен; анализ ветвей/PR и quality gate на MR требуют
+  # платных редакций (Developer+). Здесь — только анализ основной ветки.
+  sonarqube-db:
+    image: postgres:18.6-alpine
+    container_name: marketsniper-sonar-db
+    profiles: ["sonar"]
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${SONAR_DB_NAME:-sonar}
+      POSTGRES_USER: ${SONAR_DB_USER:-sonar}
+      POSTGRES_PASSWORD: ${SONAR_DB_PASSWORD:?SONAR_DB_PASSWORD is required}
+      TZ: ${TZ:-Europe/Moscow}
+    volumes:
+      - sonar-db-data:/var/lib/postgresql/18/docker
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${SONAR_DB_USER:-sonar}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    networks:
+      - marketsniper-net
+
+  sonarqube:
+    image: sonarqube:26.9.0.129388-community
+    container_name: marketsniper-sonarqube
+    profiles: ["sonar"]
+    restart: unless-stopped
+    environment:
+      SONAR_JDBC_URL: jdbc:postgresql://sonarqube-db:5432/${SONAR_DB_NAME:-sonar}
+      SONAR_JDBC_USERNAME: ${SONAR_DB_USER:-sonar}
+      SONAR_JDBC_PASSWORD: ${SONAR_DB_PASSWORD}
+      TZ: ${TZ:-Europe/Moscow}
+    ports:
+      - "${SONAR_HOST_PORT:-9000}:9000"
+    volumes:
+      - sonarqube-data:/opt/sonarqube/data
+      - sonarqube-extensions:/opt/sonarqube/extensions
+      - sonarqube-logs:/opt/sonarqube/logs
+    depends_on:
+      sonarqube-db:
+        condition: service_healthy
+    networks:
+      - marketsniper-net
+
+volumes:
+  seq-data:
+    name: marketsniper-seq-data
+  pgadmin-data:
+    name: marketsniper-pgadmin-data
+  sonar-db-data:
+    name: marketsniper-sonar-db-data
+  sonarqube-data:
+    name: marketsniper-sonarqube-data
+  sonarqube-extensions:
+    name: marketsniper-sonarqube-extensions
+  sonarqube-logs:
+    name: marketsniper-sonarqube-logs
+
+networks:
+  marketsniper-net:
+    name: marketsniper-net
+    external: true

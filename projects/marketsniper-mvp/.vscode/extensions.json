@@ -1,0 +1,31 @@
+{
+  // Рекомендуемые расширения для работы с проектом.
+  // VS Code предложит установить их при открытии репозитория.
+  "recommendations": [
+    // .NET / C#
+    "ms-dotnettools.csdevkit",
+    "ms-dotnettools.csharp",
+    "ms-dotnettools.vscode-dotnet-runtime",
+
+    // Фронтенд
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "bradlc.vscode-tailwindcss",
+    "vitest.explorer",
+    "ms-playwright.playwright",
+
+    // Инфраструктура
+    "ms-azuretools.vscode-docker",
+    "redhat.vscode-yaml",
+    "gitlab.gitlab-workflow",
+    "editorconfig.editorconfig",
+
+    // Качество
+    "sonarsource.sonarlint-vscode",
+    "usernamehw.errorlens"
+  ],
+  "unwantedRecommendations": [
+    // Платные/дублирующие инструменты, которые конфликтуют с нашими правилами
+    "ms-dotnettools.blazorwasm-companion"
+  ]
+}

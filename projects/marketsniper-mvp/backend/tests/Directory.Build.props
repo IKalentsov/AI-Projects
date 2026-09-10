@@ -1,0 +1,27 @@
+<Project>
+
+  <!--
+    Настройки для тестовых проектов (backend/tests/**).
+    Тесты — тоже продакшн-код по качеству, но с послаблениями,
+    которые оправданы самой природой тестов.
+  -->
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+
+    <!-- Тесты — не библиотека: XML-документация не требуется -->
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+  </PropertyGroup>
+
+  <!--
+    Правила, отключённые только для тестов.
+    Обоснование: имена тестов читаются человеком и намеренно длинные;
+    тесты часто используют «магические» значения как часть сценария.
+  -->
+  <PropertyGroup>
+    <NoWarn>$(NoWarn);CA1707;CA1861;MA0051;S2699</NoWarn>
+  </PropertyGroup>
+
+</Project>

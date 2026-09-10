@@ -1,0 +1,99 @@
+is_global = true
+
+# =============================================================================
+# MarketSniper — уровни правил анализаторов (.NET)
+# Базовые настройки: backend/Directory.Build.props
+# Стиль и форматирование: .editorconfig в корне репозитория
+#
+# Принцип: правило отключается ТОЛЬКО с обоснованием в комментарии.
+# Включение новых правил — через архитектора (см. AGENTS.md).
+# =============================================================================
+
+# --- Общие послабления (осознанные) -----------------------------------------
+
+# CA1848: логирование через source-generated LoggerMessage — избыточно на старте
+dotnet_diagnostic.CA1848.severity = none
+
+# CA1873: проверка «дорого ли логировать» — анализатор шумный
+dotnet_diagnostic.CA1873.severity = none
+
+# CA1727: имена параметров логгера — конфликтует со стилем сообщений
+dotnet_diagnostic.CA1727.severity = none
+
+# CA2007: ConfigureAwait — не нужен в ASP.NET Core (фреймворк управляет контекстом)
+dotnet_diagnostic.CA2007.severity = none
+
+# CA1062: проверка null-аргументов — nullable reference types делают это за нас
+dotnet_diagnostic.CA1062.severity = none
+
+# CA1812: «не инстанцированный класс» — ложные срабатывания на DI-классах
+dotnet_diagnostic.CA1812.severity = none
+
+# CA1034: вложенные типы — допустимы (DTO/Command/Handler рядом с use case)
+dotnet_diagnostic.CA1034.severity = none
+
+# CA1515: «сделай тип internal» — противоречит DI и тестируемости
+dotnet_diagnostic.CA1515.severity = none
+
+# MA0004: ConfigureAwait — не нужен в ASP.NET Core
+dotnet_diagnostic.MA0004.severity = none
+
+# MA0025: NotImplementedException — заглушки на этапе каркаса допустимы
+dotnet_diagnostic.MA0025.severity = none
+
+# MA0048: имя файла = имя типа — конфликтует с группировкой нескольких типов
+dotnet_diagnostic.MA0048.severity = none
+
+# MA0051: длина метода — обработчики use case бывают длинными осознанно
+dotnet_diagnostic.MA0051.severity = none
+
+# MA0053: sealed-классы — слишком агрессивно для DDD-сущностей
+dotnet_diagnostic.MA0053.severity = none
+
+# RCS1090: ConfigureAwait — не нужен в ASP.NET Core
+dotnet_diagnostic.RCS1090.severity = none
+
+# AsyncFixer01: «убери async/await» — меняет поведение исключений в middleware
+dotnet_diagnostic.AsyncFixer01.severity = none
+
+# S1135: TODO/FIXME — это маяки, а не дефекты
+dotnet_diagnostic.S1135.severity = none
+
+# S1144: «неиспользуемый private-член» — ложные срабатывания на EF shadow properties
+dotnet_diagnostic.S1144.severity = none
+
+# S6678: правило про culture в логировании — пересекается с CA1305
+dotnet_diagnostic.S6678.severity = none
+
+# --- Строже, чем по умолчанию -----------------------------------------------
+
+# Все правила категории security — ошибки
+dotnet_analyzer_diagnostic.category-security.severity = error
+
+# Пустой catch без комментария
+dotnet_diagnostic.S108.severity = error
+
+# Лишний boolean-литерал в условии
+dotnet_diagnostic.S1125.severity = error
+
+# Порядок плейсхолдеров в шаблонах логирования
+dotnet_diagnostic.S6673.severity = error
+
+# --- Специфика проекта ------------------------------------------------------
+
+# CA1305: обязательно указывать IFormatProvider в форматировании
+dotnet_diagnostic.CA1305.severity = error
+
+# CA1310/CA1311: явное StringComparison и culture-aware регистр —
+# критично для парсинга названий и цен с маркетплейсов
+dotnet_diagnostic.CA1310.severity = error
+dotnet_diagnostic.CA1311.severity = error
+
+# CA2016: пробрасывать CancellationToken
+dotnet_diagnostic.CA2016.severity = error
+
+# CA1849/CA2012: синхронные вызовы в async-контексте
+dotnet_diagnostic.CA1849.severity = warning
+
+# EF1001: использование внутренних API EF Core — запрещено
+dotnet_diagnostic.EF1001.severity = error

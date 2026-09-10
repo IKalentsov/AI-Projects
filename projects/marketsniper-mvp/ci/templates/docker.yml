@@ -1,0 +1,76 @@
+# =============================================================================
+# ci/templates/docker.yml — сборка и публикация образов
+#
+# Сборка: buildx + Docker-in-Docker (SaaS-раннеры GitLab) с кэшем в registry.
+# Kaniko НЕ используем: проект архивирован и не поддерживается.
+# Если раннер запрещает privileged — заменить на rootless BuildKit
+# (`buildctl-daemonless.sh`) или rootless Buildah (см. docs/architecture/ci-cd.md).
+#
+# Условия запуска: изменения в docker/ или в Dockerfile'ах.
+# =============================================================================
+
+.docker-base:
+  image: docker:29.7.2-cli
+  stage: package
+  interruptible: true
+  services:
+    - docker:dind
+  variables:
+    DOCKER_TLS_CERTDIR: "/certs"
+    DOCKER_BUILDKIT: "1"
+
+.docker-build:
+  extends: .docker-base
+  before_script:
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
+    - docker buildx create --use --driver docker-container --name builder
+    - docker buildx inspect --bootstrap
+
+# --- Backend -----------------------------------------------------------------
+docker:backend:
+  extends: .docker-build
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes:
+        compare_to: 'refs/heads/main'
+        paths: ['backend/**/*', 'docker/**/*']
+      exists: ['docker/backend/Dockerfile']
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      exists: ['docker/backend/Dockerfile']
+    - if: $CI_COMMIT_TAG
+      exists: ['docker/backend/Dockerfile']
+  script:
+    - >
+      docker buildx build
+      --file docker/backend/Dockerfile
+      --target runtime
+      --cache-from type=registry,ref=$CI_REGISTRY_IMAGE/backend:cache
+      --cache-to type=registry,ref=$CI_REGISTRY_IMAGE/backend:cache,mode=max
+      --tag $CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHA
+      --provenance=true --sbom=true
+      --push .
+
+# --- Frontend ----------------------------------------------------------------
+docker:frontend:
+  extends: .docker-build
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes:
+        compare_to: 'refs/heads/main'
+        paths: ['frontend/**/*', 'docker/**/*']
+      exists: ['docker/frontend/Dockerfile']
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      exists: ['docker/frontend/Dockerfile']
+    - if: $CI_COMMIT_TAG
+      exists: ['docker/frontend/Dockerfile']
+  script:
+    - >
+      docker buildx build
+      --file docker/frontend/Dockerfile
+      --target runtime
+      --build-arg VITE_API_BASE_URL=/api/v1
+      --cache-from type=registry,ref=$CI_REGISTRY_IMAGE/frontend:cache
+      --cache-to type=registry,ref=$CI_REGISTRY_IMAGE/frontend:cache,mode=max
+      --tag $CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHA
+      --provenance=true --sbom=true
+      --push .

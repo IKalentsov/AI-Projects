@@ -1,0 +1,78 @@
+# =============================================================================
+# Caddyfile — reverse-proxy: /api → backend, всё остальное → frontend (SPA)
+#
+# В dev поднимается профилем `proxy`. В prod — тот же файл, но с TLS
+# (раскомментировать блок с доменом и включить автоматические сертификаты).
+# =============================================================================
+
+{
+	# В dev админ-API не нужен
+	admin off
+	# Логи в stdout — их собирает docker
+	log {
+		output stdout
+		format console
+	}
+}
+
+# --- DEV: единая точка входа на порту 80 ------------------------------------
+:80 {
+	encode zstd gzip
+
+	# API-запросы уходят в backend
+	handle /api/* {
+		reverse_proxy {$BACKEND_UPSTREAM} {
+			header_up X-Real-IP {remote_host}
+			header_up X-Forwarded-Proto {scheme}
+			# Таймауты под внешние вызовы маркетплейсов
+			transport http {
+				dial_timeout 5s
+				response_header_timeout 60s
+			}
+		}
+	}
+
+	# Документация API (Scalar)
+	handle /scalar/* {
+		reverse_proxy {$BACKEND_UPSTREAM}
+	}
+
+	handle /openapi/* {
+		reverse_proxy {$BACKEND_UPSTREAM}
+	}
+
+	# Health-checks backend
+	handle /health/* {
+		reverse_proxy {$BACKEND_UPSTREAM}
+	}
+
+	# Всё остальное — SPA
+	handle {
+		reverse_proxy {$FRONTEND_UPSTREAM}
+	}
+
+	log {
+		output stdout
+		format console
+	}
+}
+
+# --- PROD (заготовка): автоматический TLS через Let's Encrypt ----------------
+# marketsniper.example.com {
+# 	encode zstd gzip
+#
+# 	handle /api/* {
+# 		reverse_proxy {$BACKEND_UPSTREAM}
+# 	}
+#
+# 	handle {
+# 		reverse_proxy {$FRONTEND_UPSTREAM}
+# 	}
+#
+# 	header {
+# 		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+# 		X-Content-Type-Options "nosniff"
+# 		X-Frame-Options "DENY"
+# 		Referrer-Policy "strict-origin-when-cross-origin"
+# 	}
+# }
