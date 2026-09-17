@@ -1,0 +1,57 @@
+{
+  // Настройки рабочего пространства. Форматирование задаётся .editorconfig —
+  // здесь только то, что .editorconfig не покрывает.
+  "files.eol": "\n",
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+  "editor.formatOnSave": true,
+  "editor.rulers": [120],
+
+  // C#: форматирование и анализаторы приходят из .editorconfig + Directory.Build.props
+  "[csharp]": {
+    "editor.defaultFormatter": "ms-dotnettools.csharp",
+    "editor.formatOnSave": true
+  },
+  "dotnet.defaultSolution": "backend/MarketSniper.slnx",
+  "dotnet.backgroundAnalysis.analyzerDiagnosticsScope": "openFiles",
+  "omnisharp.enableEditorConfigSupport": true,
+
+  // Фронтенд: ESLint в режиме монорепо, Prettier для всего остального
+  "[typescript]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "[typescriptreact]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "[json]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "[jsonc]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "[yaml]": { "editor.defaultFormatter": "redhat.vscode-yaml" },
+  "[markdown]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "eslint.workingDirectories": [{ "mode": "auto" }],
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+
+  // Docker и YAML
+  "yaml.schemas": {
+    "https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json": [
+      "docker/compose/*.yaml",
+      "docker/compose/*.yml"
+    ]
+  },
+  "yaml.format.enable": true,
+
+  // Не засорять поиск и проводник сгенерированным
+  "search.exclude": {
+    "**/bin": true,
+    "**/obj": true,
+    "**/node_modules": true,
+    "**/dist": true,
+    "**/coverage": true,
+    "**/TestResults": true,
+    "**/pnpm-lock.yaml": true,
+    "**/packages.lock.json": true
+  },
+  "files.watcherExclude": {
+    "**/bin/**": true,
+    "**/obj/**": true,
+    "**/node_modules/**": true,
+    "**/dist/**": true
+  }
+}

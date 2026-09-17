@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="QwenAnswers.csproj" />
+  <Project Path="QwenAnswers.Tests/QwenAnswers.Tests/QwenAnswers.Tests.csproj" />
+</Solution>

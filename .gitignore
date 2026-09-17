@@ -1,0 +1,14 @@
+# Системный мусор
+.DS_Store
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*~
+*.tmp
+*.bak
+
+# IDE и редакторы (настройки внутри проектов НЕ игнорируются)
+.idea/
+*.suo
+*.user
+*.userosscache

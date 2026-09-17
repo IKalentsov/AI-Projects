@@ -1,0 +1,36 @@
+# Сборка и артефакты .NET
+**/bin/
+**/obj/
+**/TestResults/
+**/*.binlog
+**/*.trx
+**/coverage*
+**/*.nupkg
+**/*.snupkg
+
+# Иде и инструменты
+**/.vs/
+**/.idea/
+**/.vscode/
+**/*.user
+**/*.suo
+
+# Node (если появится фронтенд)
+**/node_modules/
+**/dist/
+**/build/
+**/*.tsbuildinfo
+
+# Git и служебное
+**/.git/
+**/*.log
+**/*.tmp
+
+# Тяжёлые данные и снапшоты
+**/snapshots/
+**/*.dump
+**/*.bak
+
+# Конфиденциальные файлы настроек
+.env
+appsettings.json

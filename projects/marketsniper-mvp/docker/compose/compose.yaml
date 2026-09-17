@@ -1,0 +1,27 @@
+# =============================================================================
+# compose.yaml — единая точка входа для локальной разработки.
+#
+# Собирает вместе инфраструктуру, приложения и инструменты (через include).
+# Профили позволяют поднимать только то, что нужно:
+#
+#   docker compose -f docker/compose/compose.yaml --env-file .env up -d
+#     → postgres + redis (базовый минимум)
+#
+#   docker compose -f docker/compose/compose.yaml --env-file .env \
+#     --profile app --profile observability up -d --build
+#     → плюс backend, frontend, proxy и Seq
+#
+#   docker compose -f docker/compose/compose.yaml --env-file .env \
+#     --profile tools --profile sonar up -d
+#     → плюс pgAdmin и SonarQube
+#
+# ВАЖНО: compose.app.yaml и compose.tools.yaml подключаются к внешней сети
+# marketsniper-net, которую создаёт compose.infra.yaml. Поэтому инфраструктура
+# всегда поднимается первой.
+# =============================================================================
+name: marketsniper
+
+include:
+  - compose.infra.yaml
+  - compose.app.yaml
+  - compose.tools.yaml

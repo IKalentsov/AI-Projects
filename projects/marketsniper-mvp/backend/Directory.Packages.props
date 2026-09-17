@@ -1,0 +1,126 @@
+<Project>
+
+  <!--
+    Центральное управление версиями пакетов.
+    Правила:
+      - версии указываются ТОЛЬКО здесь; в .csproj — <PackageReference Include="..." /> без Version;
+      - новая зависимость = строка здесь + обоснование в комментарии;
+      - только open source с разрешительной лицензией (MIT/Apache-2.0/BSD);
+      - версии актуальны на 2026-09-10.
+
+    Проверенные ограничения (важно не забыть при обновлении):
+      - FluentAssertions 8+ — платная (Xceed). Используем AwesomeAssertions (Apache-2.0, API FA 7.x).
+      - MassTransit 9+ — коммерческий. Последняя бесплатная — 8.5.10; брокер пока не нужен.
+      - ArchUnitNET переименован в TngTech.ArchUnitNET (июль 2026).
+      - AspNetCore.HealthChecks.* (Xabaril) застряли на 9.0.0 — health-check'и пишем на официальных
+        Microsoft-пакетах + собственные проверки Npgsql/Redis.
+      - OpenTelemetry.Instrumentation.EntityFrameworkCore — только beta (стабильной нет).
+      - xunit.v3 4.0 работает через Microsoft.Testing.Platform (см. backend/global.json).
+  -->
+
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+  </PropertyGroup>
+
+  <ItemGroup Label="Домен и результат">
+    <!-- Result Pattern: Result<T>, Result<T, Error> для бизнес-ошибок -->
+    <PackageVersion Include="CSharpFunctionalExtensions" Version="3.7.0" />
+  </ItemGroup>
+
+  <ItemGroup Label="Доступ к данным">
+    <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.12" />
+    <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
+    <PackageVersion Include="Npgsql" Version="10.0.3" />
+    <!-- Dapper — для сложных выборок и аналитики -->
+    <PackageVersion Include="Dapper" Version="2.1.79" />
+  </ItemGroup>
+
+  <ItemGroup Label="Кэш и координация">
+    <PackageVersion Include="StackExchange.Redis" Version="3.2.0" />
+    <PackageVersion Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="10.0.12" />
+    <!-- HybridCache: L1 в памяти + L2 в Redis -->
+    <PackageVersion Include="Microsoft.Extensions.Caching.Hybrid" Version="10.10.0" />
+  </ItemGroup>
+
+  <ItemGroup Label="Валидация и DI">
+    <PackageVersion Include="FluentValidation" Version="12.1.1" />
+    <PackageVersion Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
+    <!-- Сканирование сборок для регистрации в DI -->
+    <PackageVersion Include="Scrutor" Version="7.0.0" />
+  </ItemGroup>
+
+  <ItemGroup Label="API и документация">
+    <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.12" />
+    <!-- Microsoft.OpenApi нумеруется отдельно от ASP.NET Core — это не рассинхрон -->
+    <PackageVersion Include="Microsoft.OpenApi" Version="3.10.2" />
+    <!-- Scalar — интерактивная документация API вместо Swagger UI -->
+    <PackageVersion Include="Scalar.AspNetCore" Version="2.17.3" />
+  </ItemGroup>
+
+  <ItemGroup Label="Устойчивость внешних вызовов">
+    <!-- Таймауты, ретраи с backoff, circuit breaker для клиентов маркетплейсов -->
+    <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="10.10.0" />
+    <PackageVersion Include="Microsoft.Extensions.Http" Version="10.0.12" />
+  </ItemGroup>
+
+  <ItemGroup Label="Логирование и наблюдаемость">
+    <PackageVersion Include="Serilog.AspNetCore" Version="10.0.0" />
+    <PackageVersion Include="Serilog.Sinks.Console" Version="6.1.1" />
+    <!-- Seq — только для локальной разработки -->
+    <PackageVersion Include="Serilog.Sinks.Seq" Version="9.1.0" />
+    <PackageVersion Include="Serilog.Sinks.OpenTelemetry" Version="4.2.1" />
+    <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="1.18.0" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.18.0" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.Http" Version="1.18.0" />
+    <PackageVersion Include="Npgsql.OpenTelemetry" Version="10.0.3" />
+    <!-- ВНИМАНИЕ: стабильной версии нет, только beta. Включать осознанно. -->
+    <PackageVersion Include="OpenTelemetry.Instrumentation.EntityFrameworkCore" Version="1.18.0-beta.1" />
+  </ItemGroup>
+
+  <ItemGroup Label="Health checks">
+    <PackageVersion Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="10.0.12" />
+  </ItemGroup>
+
+  <ItemGroup Label="Тесты">
+    <!-- xunit.v3 4.0: работает через Microsoft.Testing.Platform, Microsoft.NET.Test.Sdk НЕ нужен -->
+    <PackageVersion Include="xunit.v3" Version="4.0.0" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="4.0.0" />
+    <PackageVersion Include="Microsoft.Testing.Extensions.TrxReport" Version="2.4.0" />
+    <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.12" />
+    <!-- Реальные PostgreSQL/Redis в интеграционных тестах -->
+    <PackageVersion Include="Testcontainers.PostgreSql" Version="4.15.0" />
+    <PackageVersion Include="Testcontainers.Redis" Version="4.15.0" />
+    <!-- Очистка БД между тестами -->
+    <PackageVersion Include="Respawn" Version="7.0.0" />
+    <!-- Подмена внешних HTTP-сервисов (маркетплейсы) в интеграционных тестах -->
+    <PackageVersion Include="WireMock.Net" Version="2.15.0" />
+    <!-- Assertions: FluentAssertions 8+ платная, поэтому используем свободный форк -->
+    <PackageVersion Include="AwesomeAssertions" Version="9.6.0" />
+    <PackageVersion Include="NSubstitute" Version="6.2.0" />
+    <!-- Архитектурные тесты: проверка границ слоёв (пакет переименован из ArchUnitNET) -->
+    <PackageVersion Include="TngTech.ArchUnitNET" Version="0.13.4" />
+    <PackageVersion Include="TngTech.ArchUnitNET.xUnitV3" Version="0.13.4" />
+    <!-- Фиксированное время в тестах -->
+    <PackageVersion Include="Microsoft.Extensions.TimeProvider.Testing" Version="10.10.0" />
+    <!-- Покрытие: под MTP используется Microsoft.Testing.Extensions.CodeCoverage -->
+    <PackageVersion Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.11.0" />
+  </ItemGroup>
+
+  <ItemGroup Label="Анализаторы (подключаются в Directory.Build.props)">
+    <PackageVersion Include="Roslynator.Analyzers" Version="5.0.0" />
+    <PackageVersion Include="Meziantou.Analyzer" Version="3.0.235" />
+    <PackageVersion Include="AsyncFixer" Version="2.1.0" />
+    <PackageVersion Include="SonarAnalyzer.CSharp" Version="10.34.0.3385" />
+  </ItemGroup>
+
+  <ItemGroup Label="Зарезервировано (не подключать без ADR)">
+    <!-- Аутентификация: включится вместе с ADR по авторизации -->
+    <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.12" />
+  </ItemGroup>
+
+</Project>

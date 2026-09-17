@@ -1,0 +1,104 @@
+# =============================================================================
+# MarketSniperMVP — .gitignore
+# Правило: секреты и локальные артефакты в репозиторий НЕ попадают.
+# =============================================================================
+
+# --- Переменные окружения и секреты -----------------------------------------
+.env
+.env.*
+!.env.example
+*.pfx
+*.snk
+
+# --- .NET -------------------------------------------------------------------
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Ww][Ii][Nn]32/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Ll]og/
+[Ll]ogs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.rsuser
+.vs/
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/tasks.json
+*.tlog
+*.binlog
+TestResults/
+[Tt]est[Rr]esult*/
+coverage*.json
+coverage*.xml
+coverage*.info
+*.coverage
+*.coveragexml
+BenchmarkDotNet.Artifacts/
+project.lock.json
+project.fragment.lock.json
+artifacts/
+.nuget/
+*.nupkg
+*.snupkg
+_ReSharper*/
+*.[Rr]e[Ss]harper
+*.DotSettings.user
+.idea/
+*.sln.iml
+Migrations/**/*.Designer.cs.bak
+
+# --- Node / фронтенд --------------------------------------------------------
+node_modules/
+.pnpm-store/
+.pnpm-debug.log*
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+dist/
+dist-ssr/
+build/
+.vite/
+*.local
+.eslintcache
+.stylelintcache
+coverage/
+playwright-report/
+blob-report/
+playwright/.cache/
+test-results/
+storybook-static/
+*.tsbuildinfo
+.npm/
+.yarn/
+
+# --- Docker -----------------------------------------------------------------
+# Локальные compose-override и данные томов
+docker/compose/*.override.yaml
+docker/compose/*.local.yaml
+docker-data/
+
+# --- IDE / ОС ---------------------------------------------------------------
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.DS_Store
+*.swp
+*~
+
+# --- Прочее -----------------------------------------------------------------
+*.tmp
+*.bak
+*.orig
+*.rej

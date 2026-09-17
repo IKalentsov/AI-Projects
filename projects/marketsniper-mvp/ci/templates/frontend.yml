@@ -1,0 +1,103 @@
+# =============================================================================
+# ci/templates/frontend.yml — линт, типы, тесты и сборка фронтенда
+#
+# Условия запуска: изменения в frontend/ И наличие lockfile.
+# Пока фронтенд не создан — джобы не появляются в пайплайне.
+#
+# pnpm ставится standalone-скриптом (pnpm рекомендует его вместо Corepack в CI:
+# shim Corepack замедляет каждый вызов).
+# =============================================================================
+
+.frontend-base:
+  image: node:24.21.0-alpine
+  interruptible: true
+  variables:
+    PNPM_HOME: "$CI_PROJECT_DIR/.pnpm"
+    PNPM_STORE_DIR: "$CI_PROJECT_DIR/.pnpm-store"
+  cache:
+    key:
+      files:
+        - frontend/pnpm-lock.yaml
+    paths:
+      - .pnpm-store
+  before_script:
+    - export PATH="$PNPM_HOME:$PATH"
+    - curl -fsSL https://get.pnpm.io/install.sh | sh -
+    - export PATH="$PNPM_HOME:$PATH"
+    - pnpm config set store-dir "$PNPM_STORE_DIR"
+    - cd frontend && pnpm install --frozen-lockfile
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes:
+        compare_to: 'refs/heads/main'
+        paths: ['frontend/**/*', '.editorconfig']
+      exists: ['frontend/pnpm-lock.yaml']
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      changes:
+        compare_to: 'HEAD~1'
+        paths: ['frontend/**/*', '.editorconfig']
+      exists: ['frontend/pnpm-lock.yaml']
+    - if: $CI_COMMIT_TAG
+      exists: ['frontend/pnpm-lock.yaml']
+
+# --- Качество кода: линт + типы ---------------------------------------------
+frontend:quality:
+  extends: .frontend-base
+  stage: test
+  script:
+    - cd frontend
+    - pnpm lint
+    - pnpm typecheck
+
+# --- Тесты (unit + component + integration) ----------------------------------
+frontend:test:
+  extends: .frontend-base
+  stage: test
+  script:
+    - cd frontend
+    - pnpm test:coverage
+  artifacts:
+    name: "frontend-tests-$CI_COMMIT_SHORT_SHA"
+    when: always
+    expire_in: 1 week
+    paths:
+      - frontend/coverage/
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: frontend/coverage/cobertura-coverage.xml
+
+# --- Сборка ------------------------------------------------------------------
+frontend:build:
+  extends: .frontend-base
+  stage: build
+  script:
+    - cd frontend
+    - pnpm build
+  artifacts:
+    name: "frontend-dist-$CI_COMMIT_SHORT_SHA"
+    expire_in: 1 day
+    paths:
+      - frontend/apps/web/dist/
+
+# --- E2E (Playwright) — только для основной ветки и MR ----------------------
+frontend:e2e:
+  extends: .frontend-base
+  stage: test
+  needs: ["frontend:build"]
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      exists: ['frontend/pnpm-lock.yaml']
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      exists: ['frontend/pnpm-lock.yaml']
+  script:
+    - cd frontend
+    - pnpm exec playwright install --with-deps chromium
+    - pnpm test:e2e
+  artifacts:
+    name: "playwright-report-$CI_COMMIT_SHORT_SHA"
+    when: always
+    expire_in: 1 week
+    paths:
+      - frontend/playwright-report/
+      - frontend/test-results/
