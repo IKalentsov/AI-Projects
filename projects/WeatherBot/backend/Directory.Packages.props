@@ -1,0 +1,48 @@
+<Project>
+
+  <!--
+    Центральное управление версиями пакетов.
+    Версии указываются ТОЛЬКО здесь; в .csproj — <PackageReference Include="..." /> без Version.
+
+    Пакеты доступа к данным (EF Core, Npgsql, Dapper) намеренно не подключены:
+    базы данных в проекте нет. Если появится — версии добавлять сюда, а не в .csproj.
+  -->
+
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+  </PropertyGroup>
+
+  <ItemGroup Label="Домен и результат">
+    <!-- Паттерн Result<T> для бизнес-ошибок (Application) -->
+    <PackageVersion Include="CSharpFunctionalExtensions" Version="3.7.0" />
+  </ItemGroup>
+
+  <ItemGroup Label="Внешние интеграции">
+    <!-- Telegram Bot API (Long Polling); единственная внешняя зависимость-клиент -->
+    <PackageVersion Include="Telegram.Bot" Version="22.10.3.1" />
+  </ItemGroup>
+
+  <ItemGroup Label="Инфраструктура фреймворка">
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.10" />
+    <PackageVersion Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.10" />
+    <PackageVersion Include="Microsoft.Extensions.Http" Version="10.0.10" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.10" />
+    <PackageVersion Include="Microsoft.Extensions.Options" Version="10.0.10" />
+    <PackageVersion Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.10" />
+  </ItemGroup>
+
+  <ItemGroup Label="HTTP / OpenAPI">
+    <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.10" />
+    <PackageVersion Include="Microsoft.OpenApi" Version="2.7.5" />
+    <PackageVersion Include="Scalar.AspNetCore" Version="2.16.16" />
+  </ItemGroup>
+
+  <ItemGroup Label="Анализаторы (версии здесь, подключение в Directory.Build.props)">
+    <PackageVersion Include="Roslynator.Analyzers" Version="4.15.0" />
+    <PackageVersion Include="Meziantou.Analyzer" Version="3.0.134" />
+    <PackageVersion Include="AsyncFixer" Version="2.1.0" />
+    <PackageVersion Include="SonarAnalyzer.CSharp" Version="10.30.0.144632" />
+  </ItemGroup>
+
+</Project>

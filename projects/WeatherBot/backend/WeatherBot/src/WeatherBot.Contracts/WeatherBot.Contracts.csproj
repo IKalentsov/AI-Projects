@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\WeatherBot.Domain\WeatherBot.Domain.csproj" />
+  </ItemGroup>
+</Project>
