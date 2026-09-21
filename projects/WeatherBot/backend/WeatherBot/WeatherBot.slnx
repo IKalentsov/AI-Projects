@@ -6,4 +6,9 @@
     <Project Path="src/WeatherBot.Infrastructure/WeatherBot.Infrastructure.csproj" />
     <Project Path="src/WeatherBot.Web/WeatherBot.Web.csproj" />
   </Folder>
+
+  <Folder Name="/tests/">
+    <Project Path="tests/WeatherBot.UnitTests/WeatherBot.UnitTests.csproj" />
+    <Project Path="tests/WeatherBot.ArchitectureTests/WeatherBot.ArchitectureTests.csproj" />
+  </Folder>
 </Solution>

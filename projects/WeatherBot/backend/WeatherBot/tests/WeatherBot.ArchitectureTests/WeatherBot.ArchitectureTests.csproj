@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
+    <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\WeatherBot.Contracts\WeatherBot.Contracts.csproj" />
+    <ProjectReference Include="..\..\src\WeatherBot.Domain\WeatherBot.Domain.csproj" />
+    <ProjectReference Include="..\..\src\WeatherBot.Application\WeatherBot.Application.csproj" />
+    <ProjectReference Include="..\..\src\WeatherBot.Infrastructure\WeatherBot.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\WeatherBot.Web\WeatherBot.Web.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="TngTech.ArchUnitNET" />
+    <PackageReference Include="TngTech.ArchUnitNET.xUnitV3" />
+  </ItemGroup>
+</Project>

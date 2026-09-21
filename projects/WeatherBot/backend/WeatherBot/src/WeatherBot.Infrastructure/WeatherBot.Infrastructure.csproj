@@ -1,5 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
+    <InternalsVisibleTo Include="WeatherBot.UnitTests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\WeatherBot.Application\WeatherBot.Application.csproj" />
     <ProjectReference Include="..\WeatherBot.Domain\WeatherBot.Domain.csproj" />
   </ItemGroup>

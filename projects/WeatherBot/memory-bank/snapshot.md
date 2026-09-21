@@ -59,6 +59,7 @@
 | Запись в кэш NuGet | `New-Item` в `~/.nuget/packages` | `UnauthorizedAccessException` — но на restore не влияет | 2026-09-21 |
 | `dotnet test` на MTP | пробный проект xunit.v3 + `global.json` | `UnauthorizedAccessException` в `NamedPipeClientStream.TryConnect` | 2026-09-21 |
 | Прямой запуск тестов | `dotnet bin/Debug/net10.0/<Tests>.dll` | `Пройден! всего: 1, сбой: 0` | 2026-09-21 |
+| Тестовый контур, первая попытка | `dotnet build WeatherBot.slnx` после работы исполнителя над `01-02` | **732 ошибки**; 9 из 9 тестовых файлов невалидны — выдуманный API xUnit v3 + порча файлов массовой заменой | 2026-09-21 |
 | Git — проект под контролем | `git -C <корень> ls-files -- ":/projects/WeatherBot"` | **76 файлов**, коммит `3e7f6d9` (2026-09-21), статус чистый | 2026-09-21 |
 | Секрет не попал в git | `git ls-files` по `appsettings.Development.json` | не отслеживается — правило `**/appsettings.Development.json` работает | 2026-09-21 |
 | Правила ignore | `git check-ignore -v --no-index` на пробных и тестовых путях | `_probe*/`, `[Oo]bj/`, `[Bb]in/` ловятся; реальный `.cs` — не ловится | 2026-09-21 |
@@ -88,7 +89,7 @@
 |----|---------|-----|-----------|--------|
 | F-01 | Ограничение платного тарифа делало сводку неотправляемой вовсе. **Закрыто решением о переходе на Open-Meteo** | `Infrastructure/Weather/` | блокирующая | закрыто решением (`01-01`) |
 | F-02 | Состояние бота не переживает перезапуск: после рестарта `IsRunning=false`, фоновая задача молчит | `Infrastructure/State/BotStateManager.cs`, `BackgroundServices/WeatherBotBackgroundService.cs` | высокая | открыто |
-| F-03 | Тестов нет вообще, а DoD их требует | `WeatherBot/tests/` | высокая | в работе (`01-02`) |
+| F-03 | Тестов нет вообще, а DoD их требует. Первая попытка (`01-02`) провалена по контексту и разбита на `01-03`…`01-05`; инфраструктура тестов уже создана и рабочая | `WeatherBot/tests/` | высокая | в работе (`01-03`…`01-05`) |
 | F-04 | ~~Проект не в git~~ — **закрыто 2026-09-21**: проект закоммичен (`3e7f6d9`), 76 файлов под контролем; секрет `appsettings.Development.json` в git не попал | репозиторий `AI-Projects` | высокая | **закрыто** |
 | F-05 | Captive dependency: `WeatherDigestService` (Singleton) захватывал `IWeatherProvider` (Transient через `AddHttpClient`). **Закрыто в `01-01`**: провайдер берёт `IHttpClientFactory` и сам зарегистрирован синглтоном | `Infrastructure/DependencyInjectionExtension.cs` | средняя | **закрыто** (`01-01`) |
 | F-06 | `TelegramBotClient` создаётся заново на каждую отправку; таймаут отправки не задан | `Infrastructure/Messaging/TelegramSender.cs` | средняя | открыто |
@@ -118,6 +119,27 @@
   **`weather_code` (WMO)** либо `precipitation`/`rain`/`snowfall`.
 - Требуется атрибуция CC-BY 4.0.
 - Источники: [Terms](https://open-meteo.com/en/terms), [Docs](https://open-meteo.com/en/docs).
+
+### Тестовый контур (xUnit v3; проверено 2026-09-21 на разборе провала)
+
+- **Атрибуты xUnit v3 тождественны v2:** `[Fact]`, `[Theory]`, `[InlineData(...)]`, `[MemberData]`.
+  Пространство имён — `Xunit`. `using Xunit.v3;` — валидное пространство расширяемости, но
+  атрибутов в нём нет. **`[fact]`, `[theory]`, `[case]` не существуют** — на этой выдумке
+  обжёгся прогон `01-02`.
+- `Should()` даёт **AwesomeAssertions** — нужен `using AwesomeAssertions;`.
+- **.NET 10:** `dotnet test` работает только в нативном режиме MTP, который включается секцией
+  `test.runner` в `backend/WeatherBot/global.json`. `TestingPlatformDotnetTestSupport` — способ
+  для .NET 9 и младше, на .NET 10 не работает.
+- **ArchUnitNET:** рабочий пример лежит в README установленного пакета —
+  `~/.nuget/packages/tngtech.archunitnet.xunitv3/0.13.4/README.md`. Пространства имён:
+  `ArchUnitNET.Domain`, `ArchUnitNET.Loader`, `ArchUnitNET.Fluent`,
+  `using static ArchUnitNET.Fluent.ArchRuleDefinition;`.
+- Прогон тестов агентом — прямым вызовом собранной сборки, не `dotnet test`.
+- **Правка файлов исполнителем — только `write`/`edit` поштучно.** В прогоне `01-02` исполнитель
+  переписал уже корректные тесты массовой заменой
+  (`-replace '[Fact]','[fact]' … | Set-Content -NoNewline`) и превратил девять файлов в мусор.
+  **Признак для ревью:** команды `pwsh` с `Set-Content`, `Out-File`, `-replace` с записью,
+  `>>` — если такие есть в сессии исполнителя, код нужно проверять заново, а не по отчёту.
 
 ### Gismeteo / Росгидромет
 

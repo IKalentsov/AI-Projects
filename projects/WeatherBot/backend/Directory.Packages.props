@@ -45,4 +45,13 @@
     <PackageVersion Include="SonarAnalyzer.CSharp" Version="10.30.0.144632" />
   </ItemGroup>
 
+  <!-- Тестовые пакеты (UnitTests + ArchitectureTests) -->
+  <ItemGroup Label="Тесты">
+    <PackageVersion Include="xunit.v3" Version="4.0.0" />
+    <PackageVersion Include="AwesomeAssertions" Version="9.6.0" />
+    <PackageVersion Include="NSubstitute" Version="6.2.0" />
+    <PackageVersion Include="TngTech.ArchUnitNET" Version="0.13.4" />
+    <PackageVersion Include="TngTech.ArchUnitNET.xUnitV3" Version="0.13.4" />
+  </ItemGroup>
+
 </Project>
