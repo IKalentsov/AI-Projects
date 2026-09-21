@@ -59,10 +59,20 @@
 | Запись в кэш NuGet | `New-Item` в `~/.nuget/packages` | `UnauthorizedAccessException` — но на restore не влияет | 2026-09-21 |
 | `dotnet test` на MTP | пробный проект xunit.v3 + `global.json` | `UnauthorizedAccessException` в `NamedPipeClientStream.TryConnect` | 2026-09-21 |
 | Прямой запуск тестов | `dotnet bin/Debug/net10.0/<Tests>.dll` | `Пройден! всего: 1, сбой: 0` | 2026-09-21 |
-| Git — под контролем версий | `git status --short -- projects/WeatherBot` | `?? projects/WeatherBot/`, `git ls-files` → **0 файлов** | 2026-09-21 |
+| Git — проект под контролем | `git -C <корень> ls-files -- ":/projects/WeatherBot"` | **76 файлов**, коммит `3e7f6d9` (2026-09-21), статус чистый | 2026-09-21 |
+| Секрет не попал в git | `git ls-files` по `appsettings.Development.json` | не отслеживается — правило `**/appsettings.Development.json` работает | 2026-09-21 |
+| Правила ignore | `git check-ignore -v --no-index` на пробных и тестовых путях | `_probe*/`, `[Oo]bj/`, `[Bb]in/` ловятся; реальный `.cs` — не ловится | 2026-09-21 |
 | Кэш NuGet (тестовые пакеты) | перебор `~/.nuget/packages` | `xunit.v3 4.0.0`, `microsoft.testing.platform 2.4.0`, `microsoft.testing.extensions.trxreport 2.4.0`, `tngtech.archunitnet(.xunitv3) 0.13.4`, `awesomeassertions 9.6.0`, `nsubstitute 6.2.0`, `coverlet.collector 6.0.4` — **есть** | 2026-09-21 |
 | Секреты в dev-конфиге | ключи без вывода значений | `Telegram:BotToken` — задан; `Telegram:ChannelId` — задан; ключа погоды нет и не требуется | 2026-09-21 |
 | Живой запрос Open-Meteo (без ключа) | `GET api.open-meteo.com/v1/forecast?...` | HTTP 200, валидный JSON с текущей погодой по Москве | 2026-09-21 |
+
+> **Ловушка измерения (дважды стоила неверного вывода 2026-09-21).** Пути **и в git-pathspec,
+> и в `Test-Path`/`Get-ChildItem`** разрешаются **относительно текущего каталога**. Из каталога
+> проекта `git ls-files -- projects/WeatherBot` ищет `WeatherBot/projects/WeatherBot` и молча
+> отдаёт пусто, а `Test-Path 'projects/WeatherBot/_probe'` проверяет несуществующий путь и
+> возвращает `False` — хотя каталог на месте. Оба раза это привело к ложному выводу.
+> **Правило: проверять от корня, для git использовать магию `:/projects/WeatherBot`,
+> а относительные пути — только от текущего каталога.**
 
 **Пробелы (здесь снапшот бессилен, нужен запуск приложения):** приложение ни разу не стартовало;
 эндпоинты не вызывались; плановая отправка не наблюдалась; реальные ключи не проверялись.
@@ -78,16 +88,16 @@
 |----|---------|-----|-----------|--------|
 | F-01 | Ограничение платного тарифа делало сводку неотправляемой вовсе. **Закрыто решением о переходе на Open-Meteo** | `Infrastructure/Weather/` | блокирующая | закрыто решением (`01-01`) |
 | F-02 | Состояние бота не переживает перезапуск: после рестарта `IsRunning=false`, фоновая задача молчит | `Infrastructure/State/BotStateManager.cs`, `BackgroundServices/WeatherBotBackgroundService.cs` | высокая | открыто |
-| F-03 | Тестов нет вообще, а DoD их требует | `WeatherBot/tests/` | высокая | в работе (`01-01`) |
-| F-04 | Проект целиком **не в git**: под контролем версий 0 файлов | репозиторий `AI-Projects` | высокая | открыто (шаг пользователя) |
-| F-05 | Captive dependency: `WeatherDigestService` (Singleton) захватывает `IWeatherProvider` (Transient через `AddHttpClient`) → HttpClient/хендлер не ротируется | `Infrastructure/DependencyInjectionExtension.cs`, `Application/DependencyInjectionExtension.cs` | средняя | открыто |
+| F-03 | Тестов нет вообще, а DoD их требует | `WeatherBot/tests/` | высокая | в работе (`01-02`) |
+| F-04 | ~~Проект не в git~~ — **закрыто 2026-09-21**: проект закоммичен (`3e7f6d9`), 76 файлов под контролем; секрет `appsettings.Development.json` в git не попал | репозиторий `AI-Projects` | высокая | **закрыто** |
+| F-05 | Captive dependency: `WeatherDigestService` (Singleton) захватывал `IWeatherProvider` (Transient через `AddHttpClient`). **Закрыто в `01-01`**: провайдер берёт `IHttpClientFactory` и сам зарегистрирован синглтоном | `Infrastructure/DependencyInjectionExtension.cs` | средняя | **закрыто** (`01-01`) |
 | F-06 | `TelegramBotClient` создаётся заново на каждую отправку; таймаут отправки не задан | `Infrastructure/Messaging/TelegramSender.cs` | средняя | открыто |
-| F-07 | «Москва» и «МСК» зашиты константами, а координаты — в настройках (сменишь координаты — сообщение соврёт) | `Infrastructure/Formatting/WeatherMessageFormatter.cs` | средняя | в работе (`01-01`) |
+| F-07 | «Москва» и «МСК» были зашиты константами, а координаты — в настройках. **Закрыто в `01-01`**: город берётся из `OpenMeteo:City`, смещение времени — из ответа API | `Infrastructure/Formatting/WeatherMessageFormatter.cs` | средняя | **закрыто** (`01-01`) |
 | F-08 | `.globalconfig` тащит обоснования из чужого проекта («vertical slice», «DDD-сущности», «EF shadow props», «Serilog») — к WeatherBot не относятся | `backend/.globalconfig` | средняя | открыто |
 | F-09 | `NextTickAt` выставляется и при остановленном боте; сразу после `start` бывает `null` | `Infrastructure/BackgroundServices/WeatherBotBackgroundService.cs` | низкая | открыто |
 | F-10 | `Contracts` ссылается на `Domain`, но не использует ни одного его типа | `WeatherBot.Contracts.csproj`, `ARCHITECTURE.md` (диаграмма) | низкая | открыто |
 | F-11 | `ParseMode.Markdown` — legacy-разметчик; ошибка разбора ломает отправку целиком | `Infrastructure/Messaging/TelegramSender.cs` | низкая | открыто |
-| F-12 | `ObservedAt` = время получения, а не время наблюдения из API | `Infrastructure/Weather/` | низкая | в работе (`01-01`) |
+| F-12 | `ObservedAt` = время получения, а не время наблюдения из API. **Закрыто в `01-01`**: момент наблюдения собирается из `current.time` + `utc_offset_seconds` | `Infrastructure/Weather/` | низкая | **закрыто** (`01-01`) |
 | F-13 | Токен бота считается скомпрометированным (передан открытым текстом), `/revoke` не сделан | конфигурация, действие пользователя | высокая | открыто |
 
 ---
@@ -132,7 +142,6 @@
   лечится `-p:NuGetAudit=false`.
 - Образец конвенции тестовых проектов — `projects/marketsniper-mvp/backend/tests/`
   (тот же монорепозиторий).
-- Подробности и диагностика — скилл `dotnet-verify-in-sandbox`.
 
 ---
 

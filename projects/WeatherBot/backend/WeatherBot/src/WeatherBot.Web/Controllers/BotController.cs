@@ -79,7 +79,6 @@ public sealed class BotController(
 
     /// <summary>
     /// Отправляет в канал тестовое сообщение, не обращаясь к API погоды.
-    /// Нужен для проверки связки «бот → канал» до получения ключа Яндекс.Погоды.
     /// </summary>
     /// <param name="cancellationToken">Токен отмены.</param>
     /// <returns>Результат отправки; 502, если Telegram отклонил запрос.</returns>

@@ -34,10 +34,11 @@ public static class DependencyInjectionExtension
         services.AddSingleton<IWeatherFormatter, WeatherMessageFormatter>();
         services.AddSingleton<ITelegramSender, TelegramSender>();
 
-        services.AddHttpClient<IWeatherProvider, YandexWeatherProvider>(client =>
-        {
-            client.Timeout = TimeSpan.FromSeconds(YandexWeatherProvider.RequestTimeoutSeconds);
-        });
+        // Регистрация IHttpClientFactory: без этого резолв IHttpClientFactory в провайдере падает.
+        services.AddHttpClient();
+
+        // Провайдер — синглтон: typed client дал бы transient и захватился бы синглтоном.
+        services.AddSingleton<IWeatherProvider, OpenMeteoWeatherProvider>();
 
         // Провайдер журналирования в память: те же записи, что идут в консоль, видит веб-интерфейс.
         services.AddSingleton<ILoggerProvider>(provider =>

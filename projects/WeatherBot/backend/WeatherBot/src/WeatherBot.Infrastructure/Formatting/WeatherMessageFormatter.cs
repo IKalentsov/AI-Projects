@@ -2,26 +2,24 @@ namespace WeatherBot.Infrastructure.Formatting;
 
 using System.Globalization;
 using System.Text;
+using Microsoft.Extensions.Options;
 using WeatherBot.Application.Abstractions;
 using WeatherBot.Domain;
 
 /// <summary>Формирует текст сообщения о погоде в разметке Markdown.</summary>
-public sealed class WeatherMessageFormatter : IWeatherFormatter
+public sealed class WeatherMessageFormatter(
+    IOptionsMonitor<WeatherSettings> weatherOptions) : IWeatherFormatter
 {
-    /// <summary>Заголовок сообщения. Пока город один, поэтому заголовок постоянный.</summary>
-    private const string Title = "🌤 *Погода в Москве*";
-
-    /// <summary>Смещение московского времени (UTC+3, переход на летнее время не применяется).</summary>
-    private static readonly TimeSpan MoscowOffset = TimeSpan.FromHours(3);
-
     /// <inheritdoc />
     public string Format(WeatherInfo weather)
     {
         ArgumentNullException.ThrowIfNull(weather);
 
+        var city = weatherOptions.CurrentValue.City;
+
         var builder = new StringBuilder();
 
-        builder.AppendLine(Title);
+        builder.AppendLine(CultureInfo.InvariantCulture, $"🌤 *Погода в {city}*");
         builder.AppendLine();
 
         builder
@@ -63,10 +61,14 @@ public sealed class WeatherMessageFormatter : IWeatherFormatter
 
         builder.AppendLine();
 
+        var offset = weather.ObservedAt.Offset;
+        var sign = offset.TotalHours >= 0 ? "+" : "";
+        var offsetStr = $"UTC{sign}{(int)offset.TotalHours}";
+
         builder
             .Append("_Обновлено: ")
-            .Append(weather.ObservedAt.ToOffset(MoscowOffset).ToString("dd.MM.yyyy HH:mm", CultureInfo.InvariantCulture))
-            .Append(" МСК_");
+            .Append(weather.ObservedAt.ToString("dd.MM.yyyy HH:mm", CultureInfo.InvariantCulture))
+            .Append(CultureInfo.InvariantCulture, $" ({offsetStr})_");
 
         return builder.ToString();
     }
