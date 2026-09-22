@@ -1,0 +1,69 @@
+is_global = true
+
+dotnet_diagnostic.CA1848.severity = none
+dotnet_diagnostic.CA1873.severity = none
+dotnet_diagnostic.CA1727.severity = none
+dotnet_diagnostic.S6678.severity = none
+
+# MA0025: убрать ошибки throw new NotImplementedException();
+# dotnet_diagnostic.MA0025.severity = none
+
+# S125: убрать ошибки с оставленными комментариями
+# dotnet_diagnostic.S125.severity = none
+
+# Все правила категории security — ошибки
+dotnet_analyzer_diagnostic.category-security.severity = error
+
+# CA2007: ConfigureAwait — не нужен в ASP.NET Core (фреймворк сам управляет контекстом)
+dotnet_diagnostic.CA2007.severity = none
+
+# CA1062: проверка null-аргументов — nullable reference types делают это за нас
+dotnet_diagnostic.CA1062.severity = none
+
+# CA1812: не инстанцированные классы — ложные срабатывания на DI-классах
+dotnet_diagnostic.CA1812.severity = none
+
+# CA1034: вложенные типы — в vertical slice один файл содержит несколько типов (Command/Handler)
+dotnet_diagnostic.CA1034.severity = none
+
+# MA0004: ConfigureAwait — не нужен в ASP.NET Core
+dotnet_diagnostic.MA0004.severity = none
+
+# MA0048: имя файла = имя типа — конфликт с vertical slice (несколько типов в файле)
+dotnet_diagnostic.MA0048.severity = none
+
+# MA0051: длина метода — обработчики use case намеренно длинные
+dotnet_diagnostic.MA0051.severity = none
+
+# MA0053: sealed классы — слишком агрессивно для DDD-сущностей
+dotnet_diagnostic.MA0053.severity = none
+
+# RCS1090: ConfigureAwait — не нужен в ASP.NET Core
+dotnet_diagnostic.RCS1090.severity = none
+
+# AsyncFixer01: убрать async/await — меняет поведение исключений в middleware
+dotnet_diagnostic.AsyncFixer01.severity = none
+
+# S1135: TODO/FIXME комментарии — маяки, не баги
+dotnet_diagnostic.S1135.severity = none
+
+# S1144: неиспользуемые private члены — ложные срабатывания на EF shadow props
+dotnet_diagnostic.S1144.severity = none
+
+# Правила строже, чем по умолчанию:
+dotnet_diagnostic.S1125.severity = error  # Redundant Boolean literal
+dotnet_diagnostic.S6673.severity = error  # Serilog template placeholder order
+dotnet_diagnostic.S108.severity  = error  # Пустой catch-блок без комментария
+
+# Правила под проект
+dotnet_diagnostic.CA1515.severity = none
+
+# CA1716: имена Start()/Stop() в IBotStateManager совпадают с ключевым словом языка VB.
+# Имена зафиксированы постановкой (управление ботом: старт/стоп), интерфейс используется
+# только из C#; отключение согласовано с пользователем.
+dotnet_diagnostic.CA1716.severity = none
+
+# CA1031: в фоновой задаче нужен перехват любого исключения.
+# Требование постановки: «Все исключения ловить внутри цикла, чтобы сервис не падал».
+# Без этого неожиданный сбой в одной итерации останавливает отправку до перезапуска.
+dotnet_diagnostic.CA1031.severity = none

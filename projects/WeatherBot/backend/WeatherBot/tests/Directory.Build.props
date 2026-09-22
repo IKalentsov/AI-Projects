@@ -1,0 +1,35 @@
+<Project>
+
+  <!--
+    ВАЖНО: MSBuild использует только БЛИЖАЙШИЙ Directory.Build.props, поэтому файл
+    в tests/ перекрывает backend/Directory.Build.props — и TargetFramework, анализаторы
+    и общие свойства до тестовых проектов не доезжают (падает NETSDK1013).
+    Явный импорт родительского файла возвращает наследование.
+  -->
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+
+  <!--
+    Настройки для тестовых проектов (tests/**).
+    Тесты — тоже продакшн-код по качеству, но с послаблениями,
+    которые оправданы самой природой тестов.
+  -->
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+
+    <!-- Тесты — не библиотека: XML-документация не требуется -->
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+  </PropertyGroup>
+
+  <!--
+    Правила, отключённые только для тестов.
+    Обоснование: имена тестов читаются человеком и намеренно длинные;
+    тесты часто используют «магические» значения как часть сценария.
+  -->
+  <PropertyGroup>
+    <NoWarn>$(NoWarn);CA1707;CA1861;MA0051;S2699</NoWarn>
+  </PropertyGroup>
+
+</Project>

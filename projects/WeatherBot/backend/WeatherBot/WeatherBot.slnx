@@ -1,0 +1,14 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/WeatherBot.Application/WeatherBot.Application.csproj" />
+    <Project Path="src/WeatherBot.Contracts/WeatherBot.Contracts.csproj" />
+    <Project Path="src/WeatherBot.Domain/WeatherBot.Domain.csproj" />
+    <Project Path="src/WeatherBot.Infrastructure/WeatherBot.Infrastructure.csproj" />
+    <Project Path="src/WeatherBot.Web/WeatherBot.Web.csproj" />
+  </Folder>
+
+  <Folder Name="/tests/">
+    <Project Path="tests/WeatherBot.UnitTests/WeatherBot.UnitTests.csproj" />
+    <Project Path="tests/WeatherBot.ArchitectureTests/WeatherBot.ArchitectureTests.csproj" />
+  </Folder>
+</Solution>

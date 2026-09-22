@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <ItemGroup>
+    <ProjectReference Include="..\WeatherBot.Application\WeatherBot.Application.csproj" />
+    <ProjectReference Include="..\WeatherBot.Contracts\WeatherBot.Contracts.csproj" />
+    <ProjectReference Include="..\WeatherBot.Domain\WeatherBot.Domain.csproj" />
+    <ProjectReference Include="..\WeatherBot.Infrastructure\WeatherBot.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <PackageReference Include="Scalar.AspNetCore" />
+  </ItemGroup>
+</Project>
