@@ -1,5 +1,6 @@
 namespace WeatherBot.Infrastructure.Weather;
 
+using System.Globalization;
 using System.Text.Json;
 using CSharpFunctionalExtensions;
 using Microsoft.Extensions.Logging;
@@ -68,8 +69,8 @@ public sealed class OpenMeteoWeatherProvider(
 
     private static string BuildUrl(WeatherSettings settings) =>
         $"https://api.open-meteo.com/v1/forecast" +
-        $"?latitude={settings.Latitude}" +
-        $"&longitude={settings.Longitude}" +
+        $"?latitude={settings.Latitude.ToString(CultureInfo.InvariantCulture)}" +
+        $"&longitude={settings.Longitude.ToString(CultureInfo.InvariantCulture)}" +
         $"&current=temperature_2m,relative_humidity_2m,apparent_temperature," +
         $"precipitation,rain,snowfall,weather_code,cloud_cover," +
         $"pressure_msl,wind_speed_10m,wind_direction_10m,wind_gusts_10m" +
@@ -100,7 +101,7 @@ public sealed class OpenMeteoWeatherProvider(
         var weather = new WeatherInfo(
             TemperatureC: (int)Math.Round(c.Temperature2m),
             FeelsLikeC: (int)Math.Round(c.ApparentTemperature),
-            HumidityPercent: (int)c.RelativeHumidity2m,
+            HumidityPercent: (int)Math.Round(c.RelativeHumidity2m, MidpointRounding.AwayFromZero),
             PressureMmHg: OpenMeteoWeatherMapper.ToPressureMmHg(c.PressureMsl),
             WindSpeedMs: c.WindSpeed10m,
             WindDirection: OpenMeteoWeatherMapper.ToWindDirection(c.WindDirection10m),

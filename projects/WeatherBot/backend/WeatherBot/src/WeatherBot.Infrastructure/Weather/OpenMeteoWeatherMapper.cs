@@ -81,7 +81,7 @@ internal static class OpenMeteoWeatherMapper
     internal static PrecipitationStrength ToPrecipitationStrength(double precipitationMmH) =>
         precipitationMmH switch
         {
-            0 => PrecipitationStrength.None,
+            <= 0 => PrecipitationStrength.None,
             > 0 and <= 0.5 => PrecipitationStrength.Weak,
             > 0.5 and <= 2.5 => PrecipitationStrength.Moderate,
             > 2.5 and <= 7.5 => PrecipitationStrength.Heavy,

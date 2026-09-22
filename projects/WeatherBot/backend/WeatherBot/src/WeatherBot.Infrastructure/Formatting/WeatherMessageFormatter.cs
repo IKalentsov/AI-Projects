@@ -62,8 +62,11 @@ public sealed class WeatherMessageFormatter(
         builder.AppendLine();
 
         var offset = weather.ObservedAt.Offset;
-        var sign = offset.TotalHours >= 0 ? "+" : "";
-        var offsetStr = $"UTC{sign}{(int)offset.TotalHours}";
+        var sign = offset.TotalHours >= 0 ? "+" : "-";
+        var absMinutes = Math.Abs(offset.Minutes);
+        var offsetStr = absMinutes == 0
+            ? $"UTC{sign}{Math.Abs(offset.Hours)}"
+            : $"UTC{sign}{Math.Abs(offset.Hours)}:{absMinutes:D2}";
 
         builder
             .Append("_Обновлено: ")

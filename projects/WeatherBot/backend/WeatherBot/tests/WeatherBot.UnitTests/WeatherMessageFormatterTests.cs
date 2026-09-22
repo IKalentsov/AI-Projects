@@ -86,6 +86,45 @@ public class WeatherMessageFormatterTests
         result.Should().Contain("(UTC-4)");
     }
 
+    // ─── Offset with non-zero minutes ──────────────────────────────────
+
+    [Fact]
+    public void Format_negativeOffsetWithMinutes_displaysUTCMinusWithMinutes()
+    {
+        var weather = CreateWeather(observedAt: new DateTimeOffset(2026, 9, 21, 15, 0, 0, TimeSpan.FromHours(-5.5)));
+        var formatter = new WeatherMessageFormatter(CreateOptions("TestCity"));
+        var result = formatter.Format(weather);
+        result.Should().Contain("(UTC-5:30)");
+    }
+
+    [Fact]
+    public void Format_offset30_minutes_displaysMinutes()
+    {
+        var weather = CreateWeather(observedAt: new DateTimeOffset(2026, 9, 21, 15, 0, 0, TimeSpan.FromHours(5.5)));
+        var formatter = new WeatherMessageFormatter(CreateOptions("TestCity"));
+        var result = formatter.Format(weather);
+        result.Should().Contain("(UTC+5:30)");
+    }
+
+    [Fact]
+    public void Format_offset45_minutes_displaysMinutes()
+    {
+        var weather = CreateWeather(observedAt: new DateTimeOffset(2026, 9, 21, 15, 0, 0, TimeSpan.FromHours(5.75)));
+        var formatter = new WeatherMessageFormatter(CreateOptions("TestCity"));
+        var result = formatter.Format(weather);
+        result.Should().Contain("(UTC+5:45)");
+    }
+
+    [Fact]
+    public void Format_offsetZeroMinutes_noColon()
+    {
+        var weather = CreateWeather(observedAt: new DateTimeOffset(2026, 9, 21, 15, 0, 0, TimeSpan.FromHours(5)));
+        var formatter = new WeatherMessageFormatter(CreateOptions("TestCity"));
+        var result = formatter.Format(weather);
+        result.Should().Contain("(UTC+5)");
+        result.Should().NotContain("(UTC+5:00)");
+    }
+
     // ─── Unknown values ────────────────────────────────────────────────
 
     [Fact]

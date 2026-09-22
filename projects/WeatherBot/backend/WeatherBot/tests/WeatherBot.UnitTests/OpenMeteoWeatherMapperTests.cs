@@ -136,6 +136,13 @@ public class OpenMeteoWeatherMapperTests
         result.Should().Be(expected);
     }
 
+    [Fact]
+    public void ToPrecipitationStrength_negativeValue_returnsNone()
+    {
+        var result = OpenMeteoWeatherMapper.ToPrecipitationStrength(-1.0);
+        result.Should().Be(PrecipitationStrength.None);
+    }
+
     // ─── TryParseObservedAt ─────────────────────────────────────────────
 
     [Fact]
